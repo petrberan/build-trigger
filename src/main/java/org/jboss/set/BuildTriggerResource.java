@@ -16,7 +16,8 @@ import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.jboss.logging.Logger;
 
 import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 @Path("/build-trigger")
 public class BuildTriggerResource {
@@ -54,7 +55,8 @@ public class BuildTriggerResource {
     public Response getBuildInfoFromGit(@NotNull @Valid @QueryParam("tag") String url) {
         logger.infof("Fetching remote repository: " + url);
         try {
-            BuildInfo buildInfo = gitBuildInfoAssembler.constructBuildFromURL(new URL(url));
+            URI uri = new URI(url).parseServerAuthority();
+            BuildInfo buildInfo = gitBuildInfoAssembler.constructBuildFromURL(uri.toURL());
             if (buildInfo == null) {
                 return Response.status(Response.Status.NO_CONTENT)
                         .entity(String.format("No build information available for the given URL: %s", url))
@@ -63,7 +65,7 @@ public class BuildTriggerResource {
 
             logger.infof("Successfully fetched build information for URL: %s", url);
             return Response.ok(buildInfo).build();
-        } catch (MalformedURLException e) {
+        } catch (MalformedURLException | URISyntaxException e){
             logger.errorf("Invalid URL format provided: %s. Exception: %s", url, e.getMessage());
             return null;
         }
