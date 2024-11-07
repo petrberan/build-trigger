@@ -18,6 +18,7 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.is;
 import static org.jboss.set.model.json.Stream.EAP_7_3_X;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.eq;
 
 @QuarkusTest
 public class BuildTriggerResourceTest {
@@ -28,7 +29,6 @@ public class BuildTriggerResourceTest {
     private static final String BUILD_INFO_PROJECT_VERSION = "1.0.0.Final";
     private static final String BUILD_INFO_COMMIT_SHA = "61ec86095de795f5fb817a7cc824d8d7cfb9ae51";
     private static final List<String> BUILD_INFO_STREAMS = List.of(EAP_7_3_X.frontEnd);
-    private static final List<String> BUILD_JMS_TRIGGER_PAYLOAD_STREAMS = List.of(EAP_7_3_X.backEnd);
 
     @InjectSpy
     BuildTrigger buildTrigger;
@@ -53,14 +53,13 @@ public class BuildTriggerResourceTest {
 
         Mockito.verify(buildTrigger, Mockito.times(1))
             .triggerBuild(Mockito.argThat(x -> {
-                assertEquals(USER_EMAIL, x.email);
-                assertEquals(BUILD_INFO_TAG, x.tag);
-                assertEquals(BUILD_INFO_GIT_REPO, x.gitRepo);
-                assertEquals(BUILD_INFO_PROJECT_VERSION, x.projectVersion);
-                assertEquals(BUILD_INFO_COMMIT_SHA, x.commitSha);
-                assertEquals(BUILD_JMS_TRIGGER_PAYLOAD_STREAMS, x.streams);
+                assertEquals(BUILD_INFO_TAG, x.getTag());
+                assertEquals(BUILD_INFO_GIT_REPO, x.getGitRepo());
+                assertEquals(BUILD_INFO_PROJECT_VERSION, x.getProjectVersion());
+                assertEquals(BUILD_INFO_COMMIT_SHA, x.getCommitSha());
+                assertEquals(BUILD_INFO_STREAMS, x.getStreams());
                 return true;
-            }));
+            }), eq(USER_EMAIL));
     }
 
     @Test

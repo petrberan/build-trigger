@@ -4,7 +4,6 @@ import io.quarkus.oidc.IdToken;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.QueryParam;
 import org.jboss.set.model.json.BuildInfo;
-import org.jboss.set.model.json.BuildJMSTriggerPayload;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -44,7 +43,7 @@ public class BuildTriggerResource {
         }
         logger.infof("Triggering build for product %s by %s", buildInfo, email);
 
-        buildTrigger.triggerBuild(BuildJMSTriggerPayload.from(buildInfo, email));
+        buildTrigger.triggerBuild(buildInfo, email);
 
         return Response.ok("Build triggered successfully for repository " + buildInfo.getGitRepo()
                 + ", version: " + buildInfo.getProjectVersion()).build();

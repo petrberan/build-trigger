@@ -11,6 +11,8 @@ import jakarta.jms.Session;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 import org.jboss.set.exception.BuildTriggerException;
+import org.jboss.set.jira.JiraService;
+import org.jboss.set.model.json.BuildInfo;
 import org.jboss.set.model.json.BuildJMSTriggerPayload;
 
 @ApplicationScoped
@@ -27,14 +29,20 @@ public class BuildTrigger {
     @Inject
     ConnectionFactory connectionFactory;
 
+    @Inject
+    JiraService jiraService;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public void triggerBuild(BuildJMSTriggerPayload payloadMessage) {
+    public void triggerBuild(BuildInfo buildInfo, String email) {
+        BuildJMSTriggerPayload payloadMessage = BuildJMSTriggerPayload.from(buildInfo, email);
         try (JMSContext context = connectionFactory.createContext(Session.AUTO_ACKNOWLEDGE)) {
             context.createProducer().send(context.createTopic(triggerTopic), objectMapper.writeValueAsString(payloadMessage));
             logger.infof("Build message sent to UMB. Payload: %s", payloadMessage);
-            if (payloadMessage.email != null && !payloadMessage.email.isBlank()
-                    && !payloadMessage.email.equals("Email not provided in the token")) {
+
+            jiraService.sendIssueBatch(buildInfo, email);
+
+            if (email != null && !email.isBlank() && !email.equals("Email not provided in the token")) {
                 emailService.sendMail(payloadMessage);
             } else {
                 logger.warnf("Confirmation email not sent: missing or invalid email");
